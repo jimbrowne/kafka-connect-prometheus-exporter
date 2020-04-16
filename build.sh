@@ -17,6 +17,6 @@ for OS in ${BUILD_PLATFORMS[@]}; do
     echo "Building for $OS/$ARCH"
     GOARCH=$ARCH GOOS=$OS CGO_ENABLED=0 $GO_BUILD_CMD -ldflags "$GO_BUILD_LDFLAGS"\
      -o "release/$NAME" ./kafka_connect_exporter.go
-    shasum -a 256 "release/$NAME" > "release/$NAME".sha256
+    sha256sum "release/$NAME" > "release/$NAME".sha256
   done
 done
