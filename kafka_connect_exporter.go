@@ -30,7 +30,7 @@ var (
 	isConnectorRunning = prometheus.NewDesc(
 		prometheus.BuildFQName(nameSpace, "connector", "state_running"),
 		"is the connector running?",
-		[]string{"connector", "state", "worker"}, nil)
+		[]string{"connector", "state", "worker_id"}, nil)
 	areConnectorTasksRunning = prometheus.NewDesc(
 		prometheus.BuildFQName(nameSpace, "connector", "tasks_state"),
 		"the state of tasks. 0-failed, 1-running, 2-unassigned, 3-paused",
@@ -137,16 +137,15 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 		for _, connectorTask := range connectorStatus.Tasks {
 
 			var state float64
-			switch taskState := strings.ToLower(connectorTask.State)
-			taskState {
+			switch taskState := strings.ToLower(connectorTask.State); taskState {
 			case "running":
-			    state = 1
+				state = 1
 			case "unassigned":
-			    state = 2
+				state = 2
 			case "paused":
-			    state = 3
+				state = 3
 			default:
-			    state = 0
+				state = 0
 			}
 
 			ch <- prometheus.MustNewConstMetric(
