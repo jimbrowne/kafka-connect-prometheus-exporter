@@ -30,11 +30,11 @@ var (
 	isConnectorRunning = prometheus.NewDesc(
 		prometheus.BuildFQName(nameSpace, "connector", "state_running"),
 		"is the connector running?",
-		[]string{"connector", "state", "worker_id"}, nil)
+		[]string{"connector", "consumer_group", "state", "worker_id"}, nil)
 	areConnectorTasksRunning = prometheus.NewDesc(
 		prometheus.BuildFQName(nameSpace, "connector", "tasks_state"),
 		"the state of tasks. 0-failed, 1-running, 2-unassigned, 3-paused",
-		[]string{"connector", "state", "worker_id", "id"}, nil)
+		[]string{"connector", "consumer_group", "state", "worker_id", "id"}, nil)
 )
 
 type connectors []string
@@ -60,6 +60,10 @@ type Exporter struct {
 	URI             string
 	up              prometheus.Gauge
 	connectorsCount prometheus.Gauge
+}
+
+func (s status) ConsumerGroup() string {
+	return "connect-" + s.Name
 }
 
 func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
@@ -131,7 +135,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 
 		ch <- prometheus.MustNewConstMetric(
 			isConnectorRunning, prometheus.GaugeValue, isRunning,
-			connectorStatus.Name, strings.ToLower(connectorStatus.Connector.State), connectorStatus.Connector.WorkerId,
+			connectorStatus.Name, connectorStatus.ConsumerGroup(), strings.ToLower(connectorStatus.Connector.State), connectorStatus.Connector.WorkerId,
 		)
 
 		for _, connectorTask := range connectorStatus.Tasks {
@@ -150,7 +154,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 
 			ch <- prometheus.MustNewConstMetric(
 				areConnectorTasksRunning, prometheus.GaugeValue, state,
-				connectorStatus.Name, strings.ToLower(connectorTask.State), connectorTask.WorkerId, fmt.Sprintf("%d", int(connectorTask.Id)),
+				connectorStatus.Name, connectorStatus.ConsumerGroup(), strings.ToLower(connectorTask.State), connectorTask.WorkerId, fmt.Sprintf("%d", int(connectorTask.Id)),
 			)
 		}
 
