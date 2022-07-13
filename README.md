@@ -13,6 +13,10 @@ Usage of ./kafka_connect_exporter:
         URI on which to scrape kafka connect. (default "http://127.0.0.1:8080")
   -telemetry-path string
         Path under which to expose metrics. (default "/metrics")
+  -user string
+        Kafka connect basic auth username. Used along with -pass, ignored when empty string. (default "")
+  -pass string 
+        Kafka connect basic auth password. Used along with -user, ignored when empty string. (default "")
   -version
         show version and exit
 ```

@@ -3,9 +3,13 @@ package collector
 import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
+	"github.com/vinted/kafka-connect-exporter/internal/app/kafka-connect-exporter/client"
+	"net/url"
+	"os"
 )
 
 type collector struct {
+	client                   client.Client
 	URI                      string
 	up                       prometheus.Gauge
 	connectorsCount          prometheus.Gauge
@@ -15,11 +19,36 @@ type collector struct {
 
 type connectors []string
 
-func NewCollector(uri, nameSpace string) Collector {
+var supportedSchema = map[string]bool{
+	"http":  true,
+	"https": true,
+}
+
+func NewCollector(uri, nameSpace, user, pass string) Collector {
+	parseURI, err := url.Parse(uri)
+	if err != nil {
+		log.Errorf("%v", err)
+		os.Exit(1)
+	}
+	if !supportedSchema[parseURI.Scheme] {
+		log.Error("schema not supported")
+		os.Exit(1)
+	}
+
 	log.Infoln("Collecting data from:", uri)
 
+	// Optionally provide kafka connect basic auth credentials
+	var authCredentials *client.AuthCredentials = nil
+	if user != "" && pass != "" {
+		authCredentials = &client.AuthCredentials{
+			User:     user,
+			Password: pass,
+		}
+	}
+
 	return &collector{
-		URI: uri,
+		client: client.NewClient(uri, authCredentials),
+		URI:    uri,
 		up: prometheus.NewGauge(prometheus.GaugeOpts{
 			Namespace: nameSpace,
 			Name:      "up",

@@ -6,20 +6,13 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
 	"io/ioutil"
-	"net/http"
 	"strings"
-	"time"
 )
 
 func (c *collector) Collect(ch chan<- prometheus.Metric) {
-	client := http.Client{
-		Timeout: 3 * time.Second,
-	}
-
 	c.up.Set(0)
 
-	response, err := client.Get(c.URI + "/connectors")
-	log.Infoln(c.URI + "/connectors")
+	response, err := c.client.Get("/connectors")
 	if err != nil {
 		log.Errorf("Can't scrape kafka connect: %v", err)
 		return
@@ -51,7 +44,7 @@ func (c *collector) Collect(ch chan<- prometheus.Metric) {
 
 	for _, connector := range connectorsList {
 
-		connectorStatusResponse, err := client.Get(c.URI + "/connectors/" + connector + "/status")
+		connectorStatusResponse, err := c.client.Get("/connectors/" + connector + "/status")
 		if err != nil {
 			log.Errorf("Can't get /status for: %v", err)
 			continue

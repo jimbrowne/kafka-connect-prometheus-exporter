@@ -8,7 +8,6 @@ import (
 	"github.com/prometheus/common/log"
 	"github.com/vinted/kafka-connect-exporter/internal/app/kafka-connect-exporter/collector"
 	"net/http"
-	"net/url"
 	"os"
 )
 
@@ -23,12 +22,9 @@ var (
 	listenAddress = flag.String("listen-address", ":8080", "Address on which to expose metrics.")
 	metricsPath   = flag.String("telemetry-path", "/metrics", "Path under which to expose metrics.")
 	scrapeURI     = flag.String("scrape-uri", "http://127.0.0.1:8080", "URI on which to scrape kafka connect.")
+	user          = flag.String("user", "", "Optional username for authenticating to kafka-connect")
+	pass          = flag.String("pass", "", "Optional password for authenticating to kafka-connect")
 )
-
-var supportedSchema = map[string]bool{
-	"http":  true,
-	"https": true,
-}
 
 func main() {
 	flag.Parse()
@@ -38,21 +34,11 @@ func main() {
 		os.Exit(2)
 	}
 
-	parseURI, err := url.Parse(*scrapeURI)
-	if err != nil {
-		log.Errorf("%v", err)
-		os.Exit(1)
-	}
-	if !supportedSchema[parseURI.Scheme] {
-		log.Error("schema not supported")
-		os.Exit(1)
-	}
-
 	log.Infoln("Starting kafka_connect_exporter")
 
 	prometheus.Unregister(prometheus.NewGoCollector())
 	prometheus.Unregister(prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}))
-	prometheus.MustRegister(collector.NewCollector(*scrapeURI, nameSpace))
+	prometheus.MustRegister(collector.NewCollector(*scrapeURI, nameSpace, *user, *pass))
 
 	http.Handle(*metricsPath, promhttp.Handler())
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
