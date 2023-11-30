@@ -32,6 +32,6 @@ jobs:
           goarch: ${{ matrix.goarch }}
           ldflags: "-X 'main.BuildTime=${{ steps.date.outputs.date }}' -X 'main.BuildVersion=${{ github.ref_name }}'"
           binary_name: "weather-exporter"
-          extra_files: README.md LICENSE config.sample.yaml
+          extra_files: README.md LICENSE
           overwrite: true
           retry: 8
