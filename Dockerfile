@@ -24,4 +24,9 @@ RUN groupadd -r -g 1001 app \
 EXPOSE 8080
 
 USER app
-CMD ["/app/kafka-connect-exporter"]
+CMD ["/app/kafka-connect-exporter", \
+     "-telemetry-path", "${TELEMETRY_PATH}", \
+     "-scrape-uri", "${SCRAPE_URI}", \
+     "-user", "${USERNAME}", \
+     "-pass", "${PASSWORD}" \
+]
