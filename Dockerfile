@@ -12,9 +12,9 @@ FROM alpine
 WORKDIR /app
 COPY --from=BUILDER /build/kafka-connect-exporter .
 
-ENV USER=app
-ENV UID=12345
-ENV GID=12345
+ARG USER=app
+ARG UID=12345
+ARG GID=12345
 
 RUN addgroup -g "$GID" "$USER" && \
     adduser \
@@ -29,9 +29,4 @@ RUN addgroup -g "$GID" "$USER" && \
 EXPOSE 8080
 
 USER $USER
-CMD ["/app/kafka-connect-exporter", \
-     "-telemetry-path", "${TELEMETRY_PATH}", \
-     "-scrape-uri", "${SCRAPE_URI}", \
-     "-user", "${USERNAME}", \
-     "-pass", "${PASSWORD}" \
-]
+CMD ["sh", "-c", "/app/kafka-connect-exporter -telemetry-path \"${TELEMETRY_PATH}\" -scrape-uri \"${SCRAPE_URI}\" -user \"${USERNAME}\" -pass \"${PASSWORD}\""]
