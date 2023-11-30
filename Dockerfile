@@ -1,29 +1,34 @@
-FROM --platform=$BUILDPLATFORM golang:alpine as BUILDER
-ARG TARGETPLATFORM
-ARG BUILDPLATFORM
-RUN echo "I am running on $BUILDPLATFORM, building for $TARGETPLATFORM"
+FROM golang:alpine as BUILDER
 
-WORKDIR /app
+WORKDIR /build
 
-COPY go.mod .
-COPY go.sum .
+COPY . .
 RUN go mod download && go mod tidy
 
-ADD cmd cmd
-ADD pkg pkg
 
 RUN CGO_ENABLED=0 go build
 
 FROM alpine
 WORKDIR /app
-COPY --from=BUILDER /app/kafka-connect-exporter .
-RUN groupadd -r -g 1001 app \
-    && useradd -r -u 1001 -g app app\
-    && chown -R app:app /app
+COPY --from=BUILDER /build/kafka-connect-exporter .
+
+ENV USER=app
+ENV UID=12345
+ENV GID=12345
+
+RUN addgroup -g "$GID" "$USER" && \
+    adduser \
+    --disabled-password \
+    --gecos "" \
+    --home "$(pwd)" \
+    --ingroup "$USER" \
+    --no-create-home \
+    --uid "$UID" \
+    "$USER"
 
 EXPOSE 8080
 
-USER app
+USER $USER
 CMD ["/app/kafka-connect-exporter", \
      "-telemetry-path", "${TELEMETRY_PATH}", \
      "-scrape-uri", "${SCRAPE_URI}", \
