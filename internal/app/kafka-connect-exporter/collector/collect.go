@@ -3,10 +3,11 @@ package collector
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/common/log"
 	"io/ioutil"
 	"strings"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/common/log"
 )
 
 func (c *collector) Collect(ch chan<- prometheus.Metric) {
@@ -70,6 +71,13 @@ func (c *collector) Collect(ch chan<- prometheus.Metric) {
 		ch <- prometheus.MustNewConstMetric(
 			c.isConnectorRunning, prometheus.GaugeValue, isRunning,
 			connectorStatus.Name, connectorStatus.ConsumerGroup(), strings.ToLower(connectorStatus.Connector.State), connectorStatus.Connector.WorkerId,
+		)
+
+		var validationErrorsCount float64 = float64(len(connectorStatus.ValidationErrors))
+
+		ch <- prometheus.MustNewConstMetric(
+			c.connectorValidationErrors, prometheus.GaugeValue, validationErrorsCount,
+			connectorStatus.Name, connectorStatus.ConsumerGroup(), connectorStatus.Connector.WorkerId,
 		)
 
 		for _, connectorTask := range connectorStatus.Tasks {

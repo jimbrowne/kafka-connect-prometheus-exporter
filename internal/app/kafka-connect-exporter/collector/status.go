@@ -1,9 +1,10 @@
 package collector
 
 type status struct {
-	Name      string    `json:"name"`
-	Connector connector `json:"connector"`
-	Tasks     []task    `json:"tasks"`
+	Name             string    `json:"name"`
+	Connector        connector `json:"connector"`
+	Tasks            []task    `json:"tasks"`
+	ValidationErrors []string  `json:"validation_errors"`
 }
 
 type connector struct {

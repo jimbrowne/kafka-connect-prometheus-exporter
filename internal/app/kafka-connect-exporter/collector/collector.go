@@ -1,20 +1,22 @@
 package collector
 
 import (
+	"net/url"
+	"os"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
 	"github.com/vinted/kafka-connect-exporter/internal/app/kafka-connect-exporter/client"
-	"net/url"
-	"os"
 )
 
 type collector struct {
-	client                   client.Client
-	URI                      string
-	up                       prometheus.Gauge
-	connectorsCount          prometheus.Gauge
-	isConnectorRunning       *prometheus.Desc
-	areConnectorTasksRunning *prometheus.Desc
+	client                    client.Client
+	URI                       string
+	up                        prometheus.Gauge
+	connectorsCount           prometheus.Gauge
+	isConnectorRunning        *prometheus.Desc
+	areConnectorTasksRunning  *prometheus.Desc
+	connectorValidationErrors *prometheus.Desc
 }
 
 type connectors []string
@@ -64,6 +66,12 @@ func NewCollector(uri, nameSpace, user, pass string) Collector {
 			prometheus.BuildFQName(nameSpace, "connector", "state_running"),
 			"is the connector running?",
 			[]string{"connector", "consumer_group", "state", "worker_id"},
+			nil,
+		),
+		connectorValidationErrors: prometheus.NewDesc(
+			prometheus.BuildFQName(nameSpace, "connector", "validation_errors"),
+			"connector configuration validation errors",
+			[]string{"connector", "consumer_group", "worker_id"},
 			nil,
 		),
 		areConnectorTasksRunning: prometheus.NewDesc(
